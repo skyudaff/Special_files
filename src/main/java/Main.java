@@ -5,14 +5,15 @@ import com.opencsv.CSVReader;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
+
+        // Задача 1: CSV - JSON парсер
         String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
         String fileName = "data.csv";
         List<Employee> list = parseCSV(columnMapping, fileName);
@@ -27,9 +30,52 @@ public class Main {
         String json = listToJson(list);
         writeString(json, "data.json");
 
+        // Задача 2: XML - JSON парсер
         List<Employee> list1 = parseXML("data.xml");
         String json1 = listToJson(list1);
         writeString(json1, "data2.json");
+
+        // Задача 3: JSON парсер (со звездочкой *)
+        String json2 = readString("data2.json");
+        List<Employee> list2 = jsonToList(json2);
+        for (Employee emp : list2) {
+            System.out.println(emp);
+        }
+
+    }
+
+    public static String readString(String file) {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
+
+    public static List<Employee> jsonToList(String json) {
+        List<Employee> list = new ArrayList<>();
+        try {
+            JSONParser parser = new JSONParser();
+            JSONArray arr = (JSONArray) parser.parse(json);
+
+            GsonBuilder builder = new GsonBuilder();
+            Gson gson = builder.create();
+
+            for (Object ob : arr) {
+                JSONObject jsOb = (JSONObject) ob;
+                Employee employee = gson.fromJson(jsOb.toString(), Employee.class);
+                list.add(employee);
+            }
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public static List<Employee> parseXML(String file) {
